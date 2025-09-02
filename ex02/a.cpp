@@ -28,7 +28,7 @@ int get_biggest_in_chunk(int ints[], std::size_t idx, std::size_t chunk_size) { 
 void sort_two_chunks(int ints[], std::size_t size, std::size_t idx, std::size_t chunk_size) {
     // ignore straggler chunk
     if (idx + chunk_size * 2 - 1 >= size)
-        return;
+	    return;
 
     ++number_of_comparisons;
 
@@ -54,8 +54,8 @@ bool establish_main_chain(int ints[], std::size_t size, std::size_t chunk_size) 
     return true;
 }
 
-// does a normal binary insert on an array, however, after (and including) a threshold value, binary search should
-// only consider every other element.
+// does a normal binary insert on an array, however, after (and including) a threshold value, binary search
+// only considers every other element.
 bool virtual_binary_insert(int ints[], std::size_t size, std::size_t idx, std::size_t chunk_size, std::size_t binary_insertion_threshold) {
     if (idx + chunk_size - 1 >= size) {
         // out of bounds, don't increase threshold
