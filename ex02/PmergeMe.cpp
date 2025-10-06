@@ -86,6 +86,7 @@ bool binary_insert(int ints[], std::size_t size, std::size_t insert_chunk_idx, s
     while (lo < hi) {
         mi = (lo + hi) / chunk_size / 2 * chunk_size; // floor down to lower chunk
         mi_num = chunk_to_number(ints, mi, chunk_size);
+        ++number_of_comparisons;
         if (mi_num <= number_to_insert)
             lo = mi + chunk_size; // exclude left array from search
         else if (mi >= chunk_size)
