@@ -46,13 +46,12 @@ void sort_chunk_pair(std::vector<int> &ints, std::size_t size, std::size_t idx, 
     if (idx + chunk_size * 2 - 1 >= size)
         return;
 
-    ++number_of_comparisons;
-
     // biggest element is always farthest to the right
     std::size_t biggest_element_in_first_chunk = chunk_to_number(ints, idx, chunk_size);
     std::size_t biggest_element_in_second_chunk = chunk_to_number(ints, idx + chunk_size, chunk_size);
 
     std::cout << "Comparing biggest_element_in_first_chunk " << biggest_element_in_first_chunk << " against biggest_element_in_second_chunk " << biggest_element_in_second_chunk << std::endl;
+    ++number_of_comparisons;
 
     // already sorted
     if (biggest_element_in_first_chunk < biggest_element_in_second_chunk)
@@ -90,8 +89,8 @@ bool binary_insert(std::vector<int> &ints, std::size_t size, std::size_t insert_
     while (lo < hi) {
         mi = (lo + hi) / chunk_size / 2 * chunk_size; // floor down to lower chunk
         mi_num = chunk_to_number(ints, mi, chunk_size);
-        ++number_of_comparisons;
         std::cout << "Comparing mi_num " << mi_num << " against number_to_insert " << number_to_insert << std::endl;
+        ++number_of_comparisons;
         if (mi_num <= number_to_insert)
             lo = mi + chunk_size; // exclude left array from search
         else if (mi >= chunk_size)
@@ -100,6 +99,8 @@ bool binary_insert(std::vector<int> &ints, std::size_t size, std::size_t insert_
             hi = 0;
     }
     int lo_num = chunk_to_number(ints, lo, chunk_size);
+    std::cout << "Comparing lo_num " << lo_num << " against number_to_insert " << number_to_insert << std::endl;
+    ++number_of_comparisons;
     std::size_t insert_before_idx = lo_num < number_to_insert ? lo + chunk_size : lo;
 
     // insert
@@ -241,12 +242,12 @@ void ford_johnson(std::vector<int> &ints, std::size_t size) {
 
 int main(int argc, char **argv) {
 
-    // std::vector<int> ints(argc - 1);
-    // for (int i = 1; i < argc; ++i) {
-    //     ints[i - 1] = std::atoi(argv[i]);
-    // }
+    std::vector<int> ints(argc - 1);
+    for (int i = 1; i < argc; ++i) {
+        ints[i - 1] = std::atoi(argv[i]);
+    }
 
-    std::vector<int> ints = {18, 1, 5, 7, 8, 15, 12, 10, 21, 4, 20, 11, 9, 2, 6, 17, 16, 13, 3, 14, 19};
+    // std::vector<int> ints = {18, 1, 5, 7, 8, 15, 12, 10, 21, 4, 20, 11, 9, 2, 6, 17, 16, 13, 3, 14, 19};
 
     std::cout << "Before: ";
     print_vector(ints, 0, false);
