@@ -263,7 +263,9 @@ int main(int argc, char **argv) {
     std::cout << "After:  ";
     print_vector(ints, 0, false);
 
-    std::cout << "Time to process a range of " << argc - 1 << " elements with std::vector : " << (end.tv_sec - start.tv_sec) * 1000 + (end.tv_nsec - start.tv_nsec) / 1000 << " us" << std::endl;
+    std::cout << "Time to process a range of " << argc - 1 << " integers with std::vector: " << (end.tv_sec - start.tv_sec) * 1000000000 + end.tv_nsec - start.tv_nsec
+              << " ns == " << (end.tv_sec - start.tv_sec) * 1000000 + (end.tv_nsec - start.tv_nsec) / 1000 << " us == " << (end.tv_sec - start.tv_sec) * 1000 + (end.tv_nsec - start.tv_nsec) / 1000000
+              << " ms == " << end.tv_sec - start.tv_sec + (end.tv_nsec - start.tv_nsec) / 1000000000 << " s" << std::endl;
     std::cout << "Number of comparisons: " << number_of_comparisons << std::endl;
 
     return 0;
