@@ -98,8 +98,6 @@ bool binary_insert(int ints[], std::size_t size, std::size_t insert_chunk_idx, s
     std::size_t insert_before_idx = lo_num < number_to_insert ? lo + chunk_size : lo;
 
     // insert
-    // std::cout << "Insert before idx: " << insert_before_idx << std::endl;
-    // std::cout << "Insert before num: " << chunk_to_number(ints, insert_before_idx, chunk_size) << std::endl;
     std::size_t shift_chunks = (insert_chunk_idx - insert_before_idx) / chunk_size;
     std::memmove(tmp_chunk, ints + insert_before_idx, shift_chunks * chunk_size * sizeof(*ints));
     std::memmove(ints + insert_before_idx, ints + insert_chunk_idx, chunk_size * sizeof(*ints));
@@ -214,16 +212,15 @@ void binary_insertion_according_to_jacobsthal_numbering(int ints[], std::size_t 
     std::size_t prev_jacobsthal = 1;
     std::size_t jacobsthal = 3;
 
-    std::cout << "Preparing array for binary insertion" << std::endl;
+    std::cout << "Preparing array for binary insertion, chunk size " << chunk_size << std::endl;
     bool has_straggler = prepare_for_binary_insertion(ints, size, chunk_size);
+
+    std::cout << "Inserting numbers, permuted chunks now look like this" << std::endl;
     print_array(ints, size, chunk_size, true);
 
-    std::cout << "Inserting numbers with chunk size " << chunk_size << std::endl;
     while (true) {
-        if (!binary_insertion_downwards(ints, size, chunk_size, jacobsthal, prev_jacobsthal, has_straggler)) {
-            std::cout << "Binary insertion did nothing, chunk size is " << chunk_size << std::endl;
+        if (!binary_insertion_downwards(ints, size, chunk_size, jacobsthal, prev_jacobsthal, has_straggler))
             break;
-        }
         jacobsthal += prev_jacobsthal * 2;
         prev_jacobsthal = jacobsthal - prev_jacobsthal * 2;
     }
