@@ -1,8 +1,11 @@
 #include <algorithm>
+#include <bits/time.h>
 #include <cstddef>
 #include <cstdlib>
 #include <cstring>
+#include <ctime>
 #include <iostream>
+#include <time.h>
 #include <vector>
 
 std::size_t number_of_comparisons;
@@ -50,7 +53,7 @@ void sort_chunk_pair(std::vector<int> &ints, std::size_t size, std::size_t idx, 
     std::size_t biggest_element_in_first_chunk = chunk_to_number(ints, idx, chunk_size);
     std::size_t biggest_element_in_second_chunk = chunk_to_number(ints, idx + chunk_size, chunk_size);
 
-    std::cout << "Comparing biggest_element_in_first_chunk " << biggest_element_in_first_chunk << " against biggest_element_in_second_chunk " << biggest_element_in_second_chunk << std::endl;
+    // std::cout << "Comparing biggest_element_in_first_chunk " << biggest_element_in_first_chunk << " against biggest_element_in_second_chunk " << biggest_element_in_second_chunk << std::endl;
     ++number_of_comparisons;
 
     // already sorted
@@ -78,7 +81,7 @@ bool binary_insert(std::vector<int> &ints, std::size_t size, std::size_t insert_
         return false;
     }
     int number_to_insert = chunk_to_number(ints, insert_chunk_idx, chunk_size);
-    std::cout << "Number to insert: " << number_to_insert << std::endl;
+    // std::cout << "Number to insert: " << number_to_insert << std::endl;
 
     // binary search
     std::size_t lo = 0;
@@ -89,7 +92,7 @@ bool binary_insert(std::vector<int> &ints, std::size_t size, std::size_t insert_
     while (lo < hi) {
         mi = (lo + hi) / chunk_size / 2 * chunk_size; // floor down to lower chunk
         mi_num = chunk_to_number(ints, mi, chunk_size);
-        std::cout << "Comparing mi_num " << mi_num << " against number_to_insert " << number_to_insert << std::endl;
+        // std::cout << "Comparing mi_num " << mi_num << " against number_to_insert " << number_to_insert << std::endl;
         ++number_of_comparisons;
         if (mi_num <= number_to_insert)
             lo = mi + chunk_size; // exclude left array from search
@@ -99,7 +102,7 @@ bool binary_insert(std::vector<int> &ints, std::size_t size, std::size_t insert_
             hi = 0;
     }
     int lo_num = chunk_to_number(ints, lo, chunk_size);
-    std::cout << "Comparing lo_num " << lo_num << " against number_to_insert " << number_to_insert << std::endl;
+    // std::cout << "Comparing lo_num " << lo_num << " against number_to_insert " << number_to_insert << std::endl;
     ++number_of_comparisons;
     std::size_t insert_before_idx = lo_num < number_to_insert ? lo + chunk_size : lo;
 
@@ -108,8 +111,8 @@ bool binary_insert(std::vector<int> &ints, std::size_t size, std::size_t insert_
     std::memmove(tmp_chunk.data(), ints.data() + insert_before_idx, shift_chunks * chunk_size * sizeof(ints[0]));
     std::memmove(ints.data() + insert_before_idx, ints.data() + insert_chunk_idx, chunk_size * sizeof(ints[0]));
     std::memmove(ints.data() + insert_before_idx + chunk_size, tmp_chunk.data(), shift_chunks * chunk_size * sizeof(ints[0]));
-    std::cout << "After insertion" << std::endl;
-    print_vector(ints, chunk_size, true);
+    // std::cout << "After insertion" << std::endl;
+    // print_vector(ints, chunk_size, true);
 
     return true;
 }
@@ -212,11 +215,11 @@ void binary_insertion_according_to_jacobsthal_numbering(std::vector<int> &ints, 
     std::size_t prev_jacobsthal = 1;
     std::size_t jacobsthal = 3;
 
-    std::cout << "Preparing array for binary insertion, chunk size " << chunk_size << std::endl;
+    // std::cout << "Preparing array for binary insertion, chunk size " << chunk_size << std::endl;
     prepare_for_binary_insertion(ints, size, chunk_size);
 
-    std::cout << "Inserting numbers, permuted chunks now look like this" << std::endl;
-    print_vector(ints, chunk_size, true);
+    // std::cout << "Inserting numbers, permuted chunks now look like this" << std::endl;
+    // print_vector(ints, chunk_size, true);
 
     while (true) {
         if (!binary_insertion_downwards(ints, size, chunk_size, jacobsthal, prev_jacobsthal))
@@ -229,8 +232,8 @@ void binary_insertion_according_to_jacobsthal_numbering(std::vector<int> &ints, 
 void sort_main_chain(std::vector<int> &ints, std::size_t size, std::size_t chunk_size) {
     if (!sort_chunk_pairs(ints, size, chunk_size))
         return;
-    std::cout << "Red highlight == main chain, yellow highlight == chunk with size " << chunk_size << std::endl;
-    print_vector(ints, chunk_size, true);
+    // std::cout << "Red highlight == main chain, yellow highlight == chunk with size " << chunk_size << std::endl;
+    // print_vector(ints, chunk_size, true);
     sort_main_chain(ints, size, chunk_size << 1);
     binary_insertion_according_to_jacobsthal_numbering(ints, size, chunk_size);
 }
@@ -252,11 +255,15 @@ int main(int argc, char **argv) {
     std::cout << "Before: ";
     print_vector(ints, 0, false);
 
+    struct timespec start, end;
+    clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &start);
     ford_johnson(ints, ints.size());
+    clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &end);
 
     std::cout << "After:  ";
     print_vector(ints, 0, false);
 
+    std::cout << "Time to process a range of " << argc - 1 << " elements with std::vector : " << (end.tv_sec - start.tv_sec) * 1000 + (end.tv_nsec - start.tv_nsec) / 1000 << " us" << std::endl;
     std::cout << "Number of comparisons: " << number_of_comparisons << std::endl;
 
     return 0;
