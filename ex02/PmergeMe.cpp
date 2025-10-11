@@ -5,21 +5,20 @@
 #include <cstring>
 #include <ctime>
 #include <iostream>
+#include <list>
 #include <time.h>
 #include <vector>
-#include <list>
-
 
 /// vector start ///
 std::size_t number_of_comparisons_vector;
 std::vector<int> tmp_chunk;
 
-void print_vector(std::vector<int> &ints, std::size_t chunk_size, bool color) {
+void print_vector(std::vector<int> &ints, std::size_t chunk_size, bool color_chunks) {
     for (std::size_t idx = 0; idx < ints.size(); ++idx) {
         if (idx > 0)
             std::cout << ", ";
 
-        if (!color) {
+        if (!color_chunks) {
             std::cout << ints[idx];
             continue;
         }
@@ -37,7 +36,7 @@ void print_vector(std::vector<int> &ints, std::size_t chunk_size, bool color) {
         if (is_main_chain || is_end_of_chunk)
             std::cout << "\033[m";
     }
-    if (color)
+    if (color_chunks)
         std::cout << "\033[m";
     std::cout << std::endl;
 }
@@ -77,6 +76,7 @@ bool sort_chunk_pairs_vector(std::vector<int> &ints, std::size_t size, std::size
     return true;
 }
 
+// do a binary search and then insert element at given place. Takes O(n) on when using an array/vector.
 bool binary_insert_vector(std::vector<int> &ints, std::size_t size, std::size_t insert_chunk_idx, std::size_t chunk_size, std::size_t binary_search_end_chunk) {
     if (insert_chunk_idx + chunk_size - 1 >= size) {
         // out of bounds
@@ -120,6 +120,7 @@ bool binary_insert_vector(std::vector<int> &ints, std::size_t size, std::size_t 
     return true;
 }
 
+// does binary insertion "downwards" from increasing Jacobsthal numbers
 bool binary_insertion_downwards_vector(std::vector<int> &ints, std::size_t size, std::size_t chunk_size, std::size_t jacobsthal, std::size_t prev_jacobsthal) {
     --jacobsthal; // decrementing since `ints` is 0-indexed
     --prev_jacobsthal;
@@ -241,6 +242,7 @@ void sort_main_chain_vector(std::vector<int> &ints, std::size_t size, std::size_
     binary_insertion_according_to_jacobsthal_numbering_vector(ints, size, chunk_size);
 }
 
+// minimum comparison sort
 void ford_johnson_vector(std::vector<int> &ints, std::size_t size) {
     tmp_chunk.reserve(size);
     sort_main_chain_vector(ints, size, 1);
@@ -343,12 +345,14 @@ int main(int argc, char **argv) {
     print_list(ints_list, 0, false);
 
     std::cout << "Time to process a range of " << argc - 1 << " integers with std::vector: " << (end_vector.tv_sec - start_vector.tv_sec) * 1000000000 + end_vector.tv_nsec - start_vector.tv_nsec
-              << " ns == " << (end_vector.tv_sec - start_vector.tv_sec) * 1000000 + (end_vector.tv_nsec - start_vector.tv_nsec) / 1000 << " us == " << (end_vector.tv_sec - start_vector.tv_sec) * 1000 + (end_vector.tv_nsec - start_vector.tv_nsec) / 1000000
+              << " ns == " << (end_vector.tv_sec - start_vector.tv_sec) * 1000000 + (end_vector.tv_nsec - start_vector.tv_nsec) / 1000
+              << " us == " << (end_vector.tv_sec - start_vector.tv_sec) * 1000 + (end_vector.tv_nsec - start_vector.tv_nsec) / 1000000
               << " ms == " << end_vector.tv_sec - start_vector.tv_sec + (end_vector.tv_nsec - start_vector.tv_nsec) / 1000000000 << " s" << std::endl;
     std::cout << "Number of comparisons (std::vector): " << number_of_comparisons_vector << std::endl;
 
     std::cout << "Time to process a range of " << argc - 1 << " integers with std::list:   " << (end_list.tv_sec - start_list.tv_sec) * 1000000000 + end_list.tv_nsec - start_list.tv_nsec
-              << " ns == " << (end_list.tv_sec - start_list.tv_sec) * 1000000 + (end_list.tv_nsec - start_list.tv_nsec) / 1000 << " us == " << (end_list.tv_sec - start_list.tv_sec) * 1000 + (end_list.tv_nsec - start_list.tv_nsec) / 1000000
+              << " ns == " << (end_list.tv_sec - start_list.tv_sec) * 1000000 + (end_list.tv_nsec - start_list.tv_nsec) / 1000
+              << " us == " << (end_list.tv_sec - start_list.tv_sec) * 1000 + (end_list.tv_nsec - start_list.tv_nsec) / 1000000
               << " ms == " << end_list.tv_sec - start_list.tv_sec + (end_list.tv_nsec - start_list.tv_nsec) / 1000000000 << " s" << std::endl;
     std::cout << "Number of comparisons (std::list):   " << number_of_comparisons_list << std::endl;
 
