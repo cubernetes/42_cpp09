@@ -5,6 +5,7 @@
 #include <cstring>
 #include <ctime>
 #include <iostream>
+#include <iterator>
 #include <list>
 #include <time.h>
 #include <vector>
@@ -46,16 +47,18 @@ int chunk_to_number_vector(std::vector<int> &ints, std::size_t idx, std::size_t 
 
 // ascending
 // assumes bound check has already been made, might segfault otherwise
-void sort_chunk_pair_vector(std::vector<int> &ints, std::size_t size, std::size_t idx, std::size_t chunk_size) {
+void sort_chunk_pair_vector(std::vector<int> &ints, std::size_t idx, std::size_t chunk_size) {
     // ignore straggler chunk
-    if (idx + chunk_size * 2 - 1 >= size)
+    if (idx + chunk_size * 2 - 1 >= ints.size())
         return;
 
     // biggest element is always farthest to the right
-    std::size_t biggest_element_in_first_chunk = chunk_to_number_vector(ints, idx, chunk_size);
-    std::size_t biggest_element_in_second_chunk = chunk_to_number_vector(ints, idx + chunk_size, chunk_size);
+    int biggest_element_in_first_chunk = chunk_to_number_vector(ints, idx, chunk_size);
+    int biggest_element_in_second_chunk = chunk_to_number_vector(ints, idx + chunk_size, chunk_size);
 
-    // std::cout << "Comparing biggest_element_in_first_chunk " << biggest_element_in_first_chunk << " against biggest_element_in_second_chunk " << biggest_element_in_second_chunk << std::endl;
+#ifdef DEBUG
+    std::cout << "Comparing biggest_element_in_first_chunk " << biggest_element_in_first_chunk << " against biggest_element_in_second_chunk " << biggest_element_in_second_chunk << std::endl;
+#endif
     ++number_of_comparisons_vector;
 
     // already sorted
@@ -68,23 +71,25 @@ void sort_chunk_pair_vector(std::vector<int> &ints, std::size_t size, std::size_
 }
 
 // returning `false` is the base case: we only have 1 or 0 elements, which are already, necessarily sorted
-bool sort_chunk_pairs_vector(std::vector<int> &ints, std::size_t size, std::size_t chunk_size) {
-    if (chunk_size * 2 > size)
+bool sort_chunk_pairs_vector(std::vector<int> &ints, std::size_t chunk_size) {
+    if (chunk_size * 2 > ints.size())
         return false; // need at least one chunk pair because the loop runs at least once
-    for (std::size_t idx = 0; idx < size; idx += chunk_size * 2)
-        sort_chunk_pair_vector(ints, size, idx, chunk_size);
+    for (std::size_t idx = 0; idx < ints.size(); idx += chunk_size * 2)
+        sort_chunk_pair_vector(ints, idx, chunk_size);
     return true;
 }
 
 // do a binary search and then insert element at given place. Takes O(n) on when using an array/vector.
-bool binary_insert_vector(std::vector<int> &ints, std::size_t size, std::size_t insert_chunk_idx, std::size_t chunk_size, std::size_t binary_search_end_chunk) {
-    if (insert_chunk_idx + chunk_size - 1 >= size) {
+bool binary_insert_vector(std::vector<int> &ints, std::size_t insert_chunk_idx, std::size_t chunk_size, std::size_t binary_search_end_chunk) {
+    if (insert_chunk_idx + chunk_size - 1 >= ints.size()) {
         // out of bounds
-        // std::cout << "Binary search would access index " << insert_chunk_idx + chunk_size - 1 << " (Jacobsthal logic) but we only have " << size << " numbers. Skipping" << std::endl;
+        // std::cout << "Binary search would access index " << insert_chunk_idx + chunk_size - 1 << " (Jacobsthal logic) but we only have " << ints.size() << " numbers. Skipping" << std::endl;
         return false;
     }
     int number_to_insert = chunk_to_number_vector(ints, insert_chunk_idx, chunk_size);
-    // std::cout << "Number to insert: " << number_to_insert << std::endl;
+#ifdef DEBUG
+    std::cout << "Number to insert: " << number_to_insert << std::endl;
+#endif
 
     // binary search
     std::size_t lo = 0;
@@ -95,7 +100,9 @@ bool binary_insert_vector(std::vector<int> &ints, std::size_t size, std::size_t 
     while (lo < hi) {
         mi = (lo + hi) / chunk_size / 2 * chunk_size; // floor down to lower chunk
         mi_num = chunk_to_number_vector(ints, mi, chunk_size);
-        // std::cout << "Comparing mi_num " << mi_num << " against number_to_insert " << number_to_insert << std::endl;
+#ifdef DEBUG
+        std::cout << "Comparing mi_num " << mi_num << " against number_to_insert " << number_to_insert << std::endl;
+#endif
         ++number_of_comparisons_vector;
         if (mi_num <= number_to_insert)
             lo = mi + chunk_size; // exclude left array from search
@@ -105,7 +112,9 @@ bool binary_insert_vector(std::vector<int> &ints, std::size_t size, std::size_t 
             hi = 0;
     }
     int lo_num = chunk_to_number_vector(ints, lo, chunk_size);
-    // std::cout << "Comparing lo_num " << lo_num << " against number_to_insert " << number_to_insert << std::endl;
+#ifdef DEBUG
+    std::cout << "Comparing lo_num " << lo_num << " against number_to_insert " << number_to_insert << std::endl;
+#endif
     ++number_of_comparisons_vector;
     std::size_t insert_before_idx = lo_num < number_to_insert ? lo + chunk_size : lo;
 
@@ -114,26 +123,28 @@ bool binary_insert_vector(std::vector<int> &ints, std::size_t size, std::size_t 
     std::memmove(tmp_chunk.data(), ints.data() + insert_before_idx, shift_chunks * chunk_size * sizeof(ints[0]));
     std::memmove(ints.data() + insert_before_idx, ints.data() + insert_chunk_idx, chunk_size * sizeof(ints[0]));
     std::memmove(ints.data() + insert_before_idx + chunk_size, tmp_chunk.data(), shift_chunks * chunk_size * sizeof(ints[0]));
-    // std::cout << "After insertion" << std::endl;
-    // print_vector(ints, chunk_size, true);
+#ifdef DEBUG
+    std::cout << "After insertion" << std::endl;
+    print_vector(ints, chunk_size, true);
+#endif
 
     return true;
 }
 
 // does binary insertion "downwards" from increasing Jacobsthal numbers
-bool binary_insertion_downwards_vector(std::vector<int> &ints, std::size_t size, std::size_t chunk_size, std::size_t jacobsthal, std::size_t prev_jacobsthal) {
+bool binary_insertion_downwards_vector(std::vector<int> &ints, std::size_t chunk_size, std::size_t jacobsthal, std::size_t prev_jacobsthal) {
     --jacobsthal; // decrementing since `ints` is 0-indexed
     --prev_jacobsthal;
 
-    if (jacobsthal >= size)
-        jacobsthal = size - 1;
+    if (jacobsthal >= ints.size())
+        jacobsthal = ints.size() - 1;
 
     bool did_something = false;
-    std::size_t chunk_idx = chunk_size * (size / chunk_size / 2 + jacobsthal);
-    std::size_t binary_search_end_chunk = std::min(chunk_size * (size / chunk_size / 2 + prev_jacobsthal), chunk_size * (prev_jacobsthal + jacobsthal));
+    std::size_t chunk_idx = chunk_size * (ints.size() / chunk_size / 2 + jacobsthal);
+    std::size_t binary_search_end_chunk = std::min(chunk_size * (ints.size() / chunk_size / 2 + prev_jacobsthal), chunk_size * (prev_jacobsthal + jacobsthal));
 
     for (std::size_t jacobs_idx = jacobsthal; jacobs_idx > prev_jacobsthal; --jacobs_idx) {
-        if (binary_insert_vector(ints, size, chunk_idx, chunk_size, binary_search_end_chunk))
+        if (binary_insert_vector(ints, chunk_idx, chunk_size, binary_search_end_chunk))
             did_something = true;
         else
             chunk_idx -= chunk_size;
@@ -185,13 +196,13 @@ bool binary_insertion_downwards_vector(std::vector<int> &ints, std::size_t size,
 // This way, we don't have to determine where to 'stop' transforming (i.e., the next Jacobsthal number).
 // The logic stays the same. So after this function finishes, we have all the 'c' chunks (always the first 2)
 // then the 'a' chunks, and then the 'b' chunks. The 'c' and 'a' chunks form the main chain.
-void prepare_for_binary_insertion_vector(std::vector<int> &ints, std::size_t size, std::size_t chunk_size) {
+void prepare_for_binary_insertion_vector(std::vector<int> &ints, std::size_t chunk_size) {
     std::size_t chunk_idx, offset;
 
     // save 'b' chunks
     chunk_idx = chunk_size * 2;
     offset = 0;
-    while (chunk_idx + chunk_size - 1 < size) {
+    while (chunk_idx + chunk_size - 1 < ints.size()) {
         std::memmove(tmp_chunk.data() + offset, ints.data() + chunk_idx, chunk_size * sizeof(ints[0]));
         chunk_idx += chunk_size * 2;
         offset += chunk_size;
@@ -200,7 +211,7 @@ void prepare_for_binary_insertion_vector(std::vector<int> &ints, std::size_t siz
     // move 'a' chunks
     chunk_idx = chunk_size * 2 + chunk_size;
     offset = chunk_size * 2;
-    while (chunk_idx + chunk_size - 1 < size) {
+    while (chunk_idx + chunk_size - 1 < ints.size()) {
         std::memmove(ints.data() + offset, ints.data() + chunk_idx, chunk_size * sizeof(ints[0]));
         chunk_idx += chunk_size * 2;
         offset += chunk_size;
@@ -208,44 +219,50 @@ void prepare_for_binary_insertion_vector(std::vector<int> &ints, std::size_t siz
 
     // append 'b' chunks
     std::size_t tmp_chunk_idx = 0;
-    while (offset + chunk_size - 1 < size) { // TODO refactor into a single memmove
+    while (offset + chunk_size - 1 < ints.size()) { // TODO refactor into a single memmove
         std::memmove(ints.data() + offset, tmp_chunk.data() + tmp_chunk_idx, chunk_size * sizeof(ints[0]));
         tmp_chunk_idx += chunk_size;
         offset += chunk_size;
     }
 }
 
-void binary_insertion_according_to_jacobsthal_numbering_vector(std::vector<int> &ints, std::size_t size, std::size_t chunk_size) {
+void binary_insertion_according_to_jacobsthal_numbering_vector(std::vector<int> &ints, std::size_t chunk_size) {
     std::size_t prev_jacobsthal = 1;
     std::size_t jacobsthal = 3;
 
-    // std::cout << "Preparing array for binary insertion, chunk size " << chunk_size << std::endl;
-    prepare_for_binary_insertion_vector(ints, size, chunk_size);
+#ifdef DEBUG
+    std::cout << "Preparing array for binary insertion, chunk size " << chunk_size << std::endl;
+#endif
+    prepare_for_binary_insertion_vector(ints, chunk_size);
 
-    // std::cout << "Inserting numbers, permuted chunks now look like this" << std::endl;
-    // print_vector(ints, chunk_size, true);
+#ifdef DEBUG
+    std::cout << "Inserting numbers, permuted chunks now look like this" << std::endl;
+    print_vector(ints, chunk_size, true);
+#endif
 
     while (true) {
-        if (!binary_insertion_downwards_vector(ints, size, chunk_size, jacobsthal, prev_jacobsthal))
+        if (!binary_insertion_downwards_vector(ints, chunk_size, jacobsthal, prev_jacobsthal))
             break;
         jacobsthal += prev_jacobsthal * 2;
         prev_jacobsthal = jacobsthal - prev_jacobsthal * 2;
     }
 }
 
-void sort_main_chain_vector(std::vector<int> &ints, std::size_t size, std::size_t chunk_size) {
-    if (!sort_chunk_pairs_vector(ints, size, chunk_size))
+void sort_main_chain_vector(std::vector<int> &ints, std::size_t chunk_size) {
+    if (!sort_chunk_pairs_vector(ints, chunk_size))
         return;
-    // std::cout << "Red highlight == main chain, yellow highlight == chunk with size " << chunk_size << std::endl;
-    // print_vector(ints, chunk_size, true);
-    sort_main_chain_vector(ints, size, chunk_size << 1);
-    binary_insertion_according_to_jacobsthal_numbering_vector(ints, size, chunk_size);
+#ifdef DEBUG
+    std::cout << "Red highlight == main chain, yellow highlight == chunk with size " << chunk_size << std::endl;
+    print_vector(ints, chunk_size, true);
+#endif
+    sort_main_chain_vector(ints, chunk_size << 1);
+    binary_insertion_according_to_jacobsthal_numbering_vector(ints, chunk_size);
 }
 
 // minimum comparison sort
-void ford_johnson_vector(std::vector<int> &ints, std::size_t size) {
-    tmp_chunk.reserve(size);
-    sort_main_chain_vector(ints, size, 1);
+void ford_johnson_vector(std::vector<int> &ints) {
+    tmp_chunk.reserve(ints.size());
+    sort_main_chain_vector(ints, 1);
 }
 /// vector end ///
 
@@ -281,165 +298,185 @@ void print_list(std::list<int> &ints, std::size_t chunk_size, bool color) {
     std::cout << std::endl;
 }
 
-void prepare_for_binary_insertion_list(std::list<int> &ints, std::size_t size, std::size_t chunk_size) {
-    std::size_t chunk_idx, offset;
+void prepare_for_binary_insertion_list(std::list<int> &ints, std::size_t chunk_size) {
+    std::list<int>::iterator it = ints.begin();
+    std::advance(it, chunk_size * 2);
+    if (it == ints.end())
+        return;
+    std::list<int>::iterator first_b_chunk = it;
 
-    // save 'b' chunks
-    chunk_idx = chunk_size * 2;
-    offset = 0;
-    while (chunk_idx + chunk_size - 1 < size) {
-        std::memmove(tmp_chunk.data() + offset, ints.data() + chunk_idx, chunk_size * sizeof(ints[0]));
-        chunk_idx += chunk_size * 2;
-        offset += chunk_size;
-    }
-
-    // move 'a' chunks
-    chunk_idx = chunk_size * 2 + chunk_size;
-    offset = chunk_size * 2;
-    while (chunk_idx + chunk_size - 1 < size) {
-        std::memmove(ints.data() + offset, ints.data() + chunk_idx, chunk_size * sizeof(ints[0]));
-        chunk_idx += chunk_size * 2;
-        offset += chunk_size;
-    }
-
-    // append 'b' chunks
-    std::size_t tmp_chunk_idx = 0;
-    while (offset + chunk_size - 1 < size) { // TODO refactor into a single memmove
-        std::memmove(ints.data() + offset, tmp_chunk.data() + tmp_chunk_idx, chunk_size * sizeof(ints[0]));
-        tmp_chunk_idx += chunk_size;
-        offset += chunk_size;
+    while (static_cast<std::size_t>(std::distance(it, ints.end())) >= 2 * chunk_size) {
+        std::advance(it, chunk_size);
+        std::list<int>::iterator a_chunk_begin = it;
+        std::advance(it, chunk_size);
+        std::list<int>::iterator a_chunk_end = it;
+        ints.splice(first_b_chunk, ints, a_chunk_begin, a_chunk_end);
     }
 }
 
-int chunk_to_number_list(std::list<int> &ints, std::size_t idx, std::size_t chunk_size) { return ints[idx + chunk_size - 1]; }
+void binary_insert_list(std::list<int> &ints, std::list<int>::iterator &chunk, std::size_t chunk_size, std::size_t binary_search_end_chunk) {
+    std::list<int>::iterator insert_chunk = chunk;
+    std::advance(chunk, -static_cast<int>(chunk_size));
+    std::advance(insert_chunk, chunk_size - 1);
+    int number_to_insert = *insert_chunk;
+    std::list<int>::iterator insert_chunk_end = insert_chunk;
+    ++insert_chunk_end;
+    std::advance(insert_chunk, -static_cast<int>(chunk_size) + 1);
 
-bool binary_insert_list(std::list<int> &ints, std::size_t size, std::size_t insert_chunk_idx, std::size_t chunk_size, std::size_t binary_search_end_chunk) {
-    if (insert_chunk_idx + chunk_size - 1 >= size) {
-        // out of bounds
-        // std::cout << "Binary search would access index " << insert_chunk_idx + chunk_size - 1 << " (Jacobsthal logic) but we only have " << size << " numbers. Skipping" << std::endl;
-        return false;
-    }
-    int number_to_insert = chunk_to_number_list(ints, insert_chunk_idx, chunk_size);
-    // std::cout << "Number to insert: " << number_to_insert << std::endl;
+#ifdef DEBUG
+    std::cout << "Number to insert: " << number_to_insert << std::endl;
+#endif
 
     // binary search
-    std::size_t lo = 0;
-    std::size_t hi = binary_search_end_chunk;
-    std::size_t mi;
-    int mi_num;
-
-    while (lo < hi) {
-        mi = (lo + hi) / chunk_size / 2 * chunk_size; // floor down to lower chunk
-        mi_num = chunk_to_number_list(ints, mi, chunk_size);
-        // std::cout << "Comparing mi_num " << mi_num << " against number_to_insert " << number_to_insert << std::endl;
+    std::list<int>::iterator lo = ints.begin();
+    std::list<int>::iterator hi = lo;
+    std::list<int>::iterator tmp_it, mi = lo;
+    std::advance(hi, binary_search_end_chunk);
+    while (std::distance(ints.begin(), lo) < std::distance(ints.begin(), hi)) {
+        std::advance(mi, std::distance(lo, hi) / 2 / static_cast<int>(chunk_size) * static_cast<int>(chunk_size));
+        tmp_it = mi;
+        std::advance(tmp_it, chunk_size - 1);
+        int mi_num = *tmp_it;
+#ifdef DEBUG
+        std::cout << "Comparing mi_num " << mi_num << " against number_to_insert " << number_to_insert << std::endl;
+#endif
         ++number_of_comparisons_list;
-        if (mi_num <= number_to_insert)
-            lo = mi + chunk_size; // exclude left array from search
-        else if (mi >= chunk_size)
-            hi = mi - chunk_size; // exclude right array from search
-        else
-            hi = 0;
+        if (mi_num <= number_to_insert) {
+            lo = mi;
+            std::advance(lo, chunk_size);
+        } else if (std::distance(ints.begin(), mi) >= static_cast<int>(chunk_size)) {
+            hi = mi;
+            std::advance(hi, -static_cast<int>(chunk_size));
+        } else
+            hi = ints.begin();
+        mi = lo;
     }
-    int lo_num = chunk_to_number_list(ints, lo, chunk_size);
-    // std::cout << "Comparing lo_num " << lo_num << " against number_to_insert " << number_to_insert << std::endl;
+    tmp_it = lo;
+    std::advance(tmp_it, chunk_size - 1);
+    int lo_num = *tmp_it;
+#ifdef DEBUG
+    std::cout << "Comparing lo_num " << lo_num << " against number_to_insert " << number_to_insert << std::endl;
+#endif
     ++number_of_comparisons_list;
-    std::size_t insert_before_idx = lo_num < number_to_insert ? lo + chunk_size : lo;
+    if (lo_num <= number_to_insert)
+        std::advance(lo, chunk_size);
 
     // insert
-    std::size_t shift_chunks = (insert_chunk_idx - insert_before_idx) / chunk_size;
-    std::memmove(tmp_chunk.data(), ints.data() + insert_before_idx, shift_chunks * chunk_size * sizeof(ints[0]));
-    std::memmove(ints.data() + insert_before_idx, ints.data() + insert_chunk_idx, chunk_size * sizeof(ints[0]));
-    std::memmove(ints.data() + insert_before_idx + chunk_size, tmp_chunk.data(), shift_chunks * chunk_size * sizeof(ints[0]));
-    // std::cout << "After insertion" << std::endl;
-    // print_list(ints, chunk_size, true);
-
-    return true;
+    if (lo != insert_chunk)
+        ints.splice(lo, ints, insert_chunk, insert_chunk_end);
+#ifdef DEBUG
+    std::cout << "After insertion" << std::endl;
+    print_list(ints, chunk_size, true);
+#endif
 }
 
-bool binary_insertion_downwards_list(std::list<int> &ints, std::size_t size, std::size_t chunk_size, std::size_t jacobsthal, std::size_t prev_jacobsthal) {
-    --jacobsthal; // decrementing since `ints` is 0-indexed
+bool binary_insertion_downwards_list(std::list<int> &ints, std::size_t chunk_size, std::size_t jacobsthal, std::size_t prev_jacobsthal) {
+    --jacobsthal;
     --prev_jacobsthal;
 
-    if (jacobsthal >= size)
-        jacobsthal = size - 1;
+    if (jacobsthal >= ints.size())
+        jacobsthal = ints.size() - 1;
 
     bool did_something = false;
-    std::size_t chunk_idx = chunk_size * (size / chunk_size / 2 + jacobsthal);
-    std::size_t binary_search_end_chunk = std::min(chunk_size * (size / chunk_size / 2 + prev_jacobsthal), chunk_size * (prev_jacobsthal + jacobsthal));
+    std::size_t chunk_idx = chunk_size * (ints.size() / chunk_size / 2 + jacobsthal);
+    std::size_t binary_search_end_chunk = std::min(chunk_size * (ints.size() / chunk_size / 2 + prev_jacobsthal), chunk_size * (prev_jacobsthal + jacobsthal));
 
+    std::size_t max_chunk_idx = chunk_size * (ints.size() / chunk_size - 1);
+    if (chunk_idx > max_chunk_idx) {
+        jacobsthal -= (chunk_idx - max_chunk_idx) / chunk_size;
+        chunk_idx = max_chunk_idx;
+    }
+
+    std::list<int>::iterator chunk = ints.begin();
+    std::advance(chunk, chunk_idx);
     for (std::size_t jacobs_idx = jacobsthal; jacobs_idx > prev_jacobsthal; --jacobs_idx) {
-        if (binary_insert_list(ints, size, chunk_idx, chunk_size, binary_search_end_chunk))
-            did_something = true;
-        else
-            chunk_idx -= chunk_size;
+        binary_insert_list(ints, chunk, chunk_size, binary_search_end_chunk);
+        did_something = true;
     }
     return did_something;
 }
 
-void binary_insertion_according_to_jacobsthal_numbering_list(std::list<int> &ints, std::size_t size, std::size_t chunk_size) {
+void binary_insertion_according_to_jacobsthal_numbering_list(std::list<int> &ints, std::size_t chunk_size) {
     std::size_t prev_jacobsthal = 1;
     std::size_t jacobsthal = 3;
 
-    // std::cout << "Preparing array for binary insertion, chunk size " << chunk_size << std::endl;
-    prepare_for_binary_insertion_list(ints, size, chunk_size);
+#ifdef DEBUG
+    std::cout << "Preparing array for binary insertion, chunk size " << chunk_size << std::endl;
+#endif
+    prepare_for_binary_insertion_list(ints, chunk_size);
 
-    // std::cout << "Inserting numbers, permuted chunks now look like this" << std::endl;
-    // print_list(ints, chunk_size, true);
+#ifdef DEBUG
+    std::cout << "Inserting numbers, permuted chunks now look like this" << std::endl;
+    print_list(ints, chunk_size, true);
+#endif
 
     while (true) {
-        if (!binary_insertion_downwards_list(ints, size, chunk_size, jacobsthal, prev_jacobsthal))
+        if (!binary_insertion_downwards_list(ints, chunk_size, jacobsthal, prev_jacobsthal))
             break;
         jacobsthal += prev_jacobsthal * 2;
         prev_jacobsthal = jacobsthal - prev_jacobsthal * 2;
     }
 }
 
-void sort_chunk_pair_list(std::list<int> &ints, std::size_t size, std::size_t idx, std::size_t chunk_size) {
+void sort_chunk_pair_list(std::list<int> &ints, std::size_t idx, std::size_t chunk_size, std::list<int>::iterator &chunk) {
     // ignore straggler chunk
-    if (idx + chunk_size * 2 - 1 >= size)
+    if (idx + chunk_size * 2 - 1 >= ints.size())
         return;
 
-    // biggest element is always farthest to the right
-    std::size_t biggest_element_in_first_chunk = chunk_to_number_list(ints, idx, chunk_size);
-    std::size_t biggest_element_in_second_chunk = chunk_to_number_list(ints, idx + chunk_size, chunk_size);
+    std::list<int>::iterator first_chunk = chunk;
+    std::advance(chunk, chunk_size);
+    std::list<int>::iterator second_chunk = chunk;
+    std::advance(chunk, chunk_size);
 
-    // std::cout << "Comparing biggest_element_in_first_chunk " << biggest_element_in_first_chunk << " against biggest_element_in_second_chunk " << biggest_element_in_second_chunk << std::endl;
+    // biggest element is always farthest to the right
+    std::list<int>::iterator third_chunk = chunk;
+    --third_chunk;
+    int biggest_element_in_second_chunk = *third_chunk;
+    std::advance(third_chunk, -static_cast<int>(chunk_size));
+    int biggest_element_in_first_chunk = *third_chunk;
+    third_chunk = chunk;
+
+#ifdef DEBUG
+    std::cout << "Comparing biggest_element_in_first_chunk " << biggest_element_in_first_chunk << " against biggest_element_in_second_chunk " << biggest_element_in_second_chunk << std::endl;
+#endif
     ++number_of_comparisons_list;
 
     // already sorted
     if (biggest_element_in_first_chunk < biggest_element_in_second_chunk)
         return;
 
-    std::memmove(tmp_chunk.data(), ints.data() + idx, chunk_size * sizeof(ints[0]));
-    std::memmove(ints.data() + idx, ints.data() + idx + chunk_size, chunk_size * sizeof(ints[0]));
-    std::memmove(ints.data() + idx + chunk_size, tmp_chunk.data(), chunk_size * sizeof(ints[0]));
+    ints.splice(first_chunk, ints, second_chunk, third_chunk);
 }
 
-bool sort_chunk_pairs_list(std::list<int> &ints, std::size_t size, std::size_t chunk_size) {
-    if (chunk_size * 2 > size)
+bool sort_chunk_pairs_list(std::list<int> &ints, std::size_t chunk_size) {
+    if (chunk_size * 2 > ints.size())
         return false; // need at least one chunk pair because the loop runs at least once
-    for (std::size_t idx = 0; idx < size; idx += chunk_size * 2)
-        sort_chunk_pair_list(ints, size, idx, chunk_size);
+    std::list<int>::iterator chunk = ints.begin();
+    for (std::size_t idx = 0; idx < ints.size(); idx += chunk_size * 2) {
+        sort_chunk_pair_list(ints, idx, chunk_size, chunk);
+    }
     return true;
 }
 
-void sort_main_chain_list(std::list<int> &ints, std::size_t size, std::size_t chunk_size) {
-    if (!sort_chunk_pairs_list(ints, size, chunk_size))
+void sort_main_chain_list(std::list<int> &ints, std::size_t chunk_size) {
+    if (!sort_chunk_pairs_list(ints, chunk_size))
         return;
-    // std::cout << "Red highlight == main chain, yellow highlight == chunk with size " << chunk_size << std::endl;
-    // print_list(ints, chunk_size, true);
-    sort_main_chain_list(ints, size, chunk_size << 1);
-    binary_insertion_according_to_jacobsthal_numbering_list(ints, size, chunk_size);
+#ifdef DEBUG
+    std::cout << "Red highlight == main chain, yellow highlight == chunk with size " << chunk_size << std::endl;
+    print_list(ints, chunk_size, true);
+#endif
+    sort_main_chain_list(ints, chunk_size << 1);
+    binary_insertion_according_to_jacobsthal_numbering_list(ints, chunk_size);
 }
 
-void ford_johnson_list(std::list<int> &ints, std::size_t size) { sort_main_chain_list(ints, size, 1); }
+void ford_johnson_list(std::list<int> &ints) { sort_main_chain_list(ints, 1); }
 /// list end ///
 
 int main(int argc, char **argv) {
 
-    std::vector<int> ints_vector(argc - 1);
+    std::vector<int> ints_vector(static_cast<std::size_t>(argc - 1));
     for (int i = 1; i < argc; ++i) {
-        ints_vector[i - 1] = std::atoi(argv[i]);
+        ints_vector[static_cast<std::size_t>(i - 1)] = std::atoi(argv[i]);
     }
 
     std::list<int> ints_list;
@@ -457,12 +494,12 @@ int main(int argc, char **argv) {
 
     struct timespec start_vector, end_vector;
     clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &start_vector);
-    ford_johnson_vector(ints_vector, ints_vector.size());
+    ford_johnson_vector(ints_vector);
     clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &end_vector);
 
     struct timespec start_list, end_list;
     clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &start_list);
-    ford_johnson_list(ints_list, ints_list.size());
+    ford_johnson_list(ints_list);
     clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &end_list);
 
     std::cout << "After (std::vector):  ";
