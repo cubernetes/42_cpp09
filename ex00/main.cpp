@@ -7,6 +7,7 @@
 #include <deque>
 #include <stdlib.h>
 #include <iostream>
+#include <algorithm>
 
 int dateToInt(std::string dateStr) {
     if (dateStr.length() < 10)
@@ -43,6 +44,10 @@ int dateToInt(std::string dateStr) {
     char *end;
     int dateAsInt = static_cast<int>(strtol(dateStr.c_str(), &end, 10));
     return *end ? -1 : dateAsInt;
+}
+
+bool comp(const std::pair<int, double> &a, const std::pair<int, double> &b) {
+    return a.first < b.first;
 }
 
 int main(int argc, char **argv) {
@@ -106,7 +111,18 @@ int main(int argc, char **argv) {
             std::cerr << "In file " << argv[1] << ": For date: " << dateStr << ": Amount is out of range ([0, 1000]): " << amountAsDouble << std::endl;
             continue;
         }
-        std::cout << "Input data: " << dateAsInt << ", " << amountAsDouble << std::endl;
+        // std::cout << "Input data: " << dateAsInt << ", " << amountAsDouble << std::endl;
+        std::deque<std::pair<int, double> >::const_iterator closest_entry = std::lower_bound(data.begin(), data.end(), std::make_pair(dateAsInt, 0.0), comp);
+        double rate;
+        if (closest_entry == data.begin()) {
+            std::cout << "Warning, date is too early, assuming a bitcoin rate of 0" << std::endl;
+            rate = 0;
+        } else {
+            if (closest_entry->first != dateAsInt)
+                --closest_entry;
+            rate = closest_entry->second;
+        }
+        std::cout << dateStr << " => " << amountAsDouble << " = " << rate * amountAsDouble << std::endl;
     }
     return EXIT_SUCCESS;
 }
