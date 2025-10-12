@@ -45,11 +45,11 @@ void print_vector(std::vector<int> &ints, std::size_t chunk_size, bool color_chu
 }
 
 // assumes bound check has already been made, might segfault otherwise
-int chunk_to_number_vector(std::vector<int> &ints, std::size_t idx, std::size_t chunk_size) { return ints[idx + chunk_size - 1]; }
+static int chunk_to_number_vector(std::vector<int> &ints, std::size_t idx, std::size_t chunk_size) { return ints[idx + chunk_size - 1]; }
 
 // ascending
 // assumes bound check has already been made, might segfault otherwise
-void sort_chunk_pair_vector(std::vector<int> &ints, std::size_t idx, std::size_t chunk_size) {
+static void sort_chunk_pair_vector(std::vector<int> &ints, std::size_t idx, std::size_t chunk_size) {
     // ignore straggler chunk
     if (idx + chunk_size * 2 - 1 >= ints.size())
         return;
@@ -73,7 +73,7 @@ void sort_chunk_pair_vector(std::vector<int> &ints, std::size_t idx, std::size_t
 }
 
 // returning `false` is the base case: we only have 1 or 0 elements, which are already, necessarily sorted
-bool sort_chunk_pairs_vector(std::vector<int> &ints, std::size_t chunk_size) {
+static bool sort_chunk_pairs_vector(std::vector<int> &ints, std::size_t chunk_size) {
     if (chunk_size * 2 > ints.size())
         return false; // need at least one chunk pair because the loop runs at least once
     for (std::size_t idx = 0; idx < ints.size(); idx += chunk_size * 2)
@@ -82,7 +82,7 @@ bool sort_chunk_pairs_vector(std::vector<int> &ints, std::size_t chunk_size) {
 }
 
 // do a binary search and then insert element at given place. Takes O(n) on when using an array/vector.
-bool binary_insert_vector(std::vector<int> &ints, std::size_t insert_chunk_idx, std::size_t chunk_size, std::size_t binary_search_end_chunk) {
+static bool binary_insert_vector(std::vector<int> &ints, std::size_t insert_chunk_idx, std::size_t chunk_size, std::size_t binary_search_end_chunk) {
     if (insert_chunk_idx + chunk_size - 1 >= ints.size()) {
         // out of bounds
         // std::cout << "Binary search would access index " << insert_chunk_idx + chunk_size - 1 << " (Jacobsthal logic) but we only have " << ints.size() << " numbers. Skipping" << std::endl;
@@ -134,7 +134,7 @@ bool binary_insert_vector(std::vector<int> &ints, std::size_t insert_chunk_idx, 
 }
 
 // does binary insertion "downwards" from increasing Jacobsthal numbers
-bool binary_insertion_downwards_vector(std::vector<int> &ints, std::size_t chunk_size, std::size_t jacobsthal, std::size_t prev_jacobsthal) {
+static bool binary_insertion_downwards_vector(std::vector<int> &ints, std::size_t chunk_size, std::size_t jacobsthal, std::size_t prev_jacobsthal) {
     --jacobsthal; // decrementing since `ints` is 0-indexed
     --prev_jacobsthal;
 
@@ -198,7 +198,7 @@ bool binary_insertion_downwards_vector(std::vector<int> &ints, std::size_t chunk
 // This way, we don't have to determine where to 'stop' transforming (i.e., the next Jacobsthal number).
 // The logic stays the same. So after this function finishes, we have all the 'c' chunks (always the first 2)
 // then the 'a' chunks, and then the 'b' chunks. The 'c' and 'a' chunks form the main chain.
-void prepare_for_binary_insertion_vector(std::vector<int> &ints, std::size_t chunk_size) {
+static void prepare_for_binary_insertion_vector(std::vector<int> &ints, std::size_t chunk_size) {
     std::size_t chunk_idx, offset;
 
     // save 'b' chunks
@@ -228,7 +228,7 @@ void prepare_for_binary_insertion_vector(std::vector<int> &ints, std::size_t chu
     }
 }
 
-void binary_insertion_according_to_jacobsthal_numbering_vector(std::vector<int> &ints, std::size_t chunk_size) {
+static void binary_insertion_according_to_jacobsthal_numbering_vector(std::vector<int> &ints, std::size_t chunk_size) {
     std::size_t prev_jacobsthal = 1;
     std::size_t jacobsthal = 3;
 
@@ -250,7 +250,7 @@ void binary_insertion_according_to_jacobsthal_numbering_vector(std::vector<int> 
     }
 }
 
-void sort_main_chain_vector(std::vector<int> &ints, std::size_t chunk_size) {
+static void sort_main_chain_vector(std::vector<int> &ints, std::size_t chunk_size) {
     if (!sort_chunk_pairs_vector(ints, chunk_size))
         return;
 #ifdef DEBUG_VECTOR
@@ -298,7 +298,7 @@ void print_list(std::list<int> &ints, std::size_t chunk_size, bool color) {
     std::cout << std::endl;
 }
 
-void prepare_for_binary_insertion_list(std::list<int> &ints, std::size_t chunk_size) {
+static void prepare_for_binary_insertion_list(std::list<int> &ints, std::size_t chunk_size) {
     std::list<int>::iterator it = ints.begin();
     std::advance(it, chunk_size * 2);
     if (it == ints.end())
@@ -314,7 +314,7 @@ void prepare_for_binary_insertion_list(std::list<int> &ints, std::size_t chunk_s
     }
 }
 
-void binary_insert_list(std::list<int> &ints, std::list<int>::iterator &chunk, std::size_t chunk_size, std::size_t binary_search_end_chunk) {
+static void binary_insert_list(std::list<int> &ints, std::list<int>::iterator &chunk, std::size_t chunk_size, std::size_t binary_search_end_chunk) {
     std::list<int>::iterator insert_chunk = chunk;
     std::advance(chunk, -static_cast<int>(chunk_size));
     std::advance(insert_chunk, chunk_size - 1);
@@ -370,7 +370,7 @@ void binary_insert_list(std::list<int> &ints, std::list<int>::iterator &chunk, s
 #endif
 }
 
-bool binary_insertion_downwards_list(std::list<int> &ints, std::size_t chunk_size, std::size_t jacobsthal, std::size_t prev_jacobsthal) {
+static bool binary_insertion_downwards_list(std::list<int> &ints, std::size_t chunk_size, std::size_t jacobsthal, std::size_t prev_jacobsthal) {
     --jacobsthal;
     --prev_jacobsthal;
 
@@ -396,7 +396,7 @@ bool binary_insertion_downwards_list(std::list<int> &ints, std::size_t chunk_siz
     return did_something;
 }
 
-void binary_insertion_according_to_jacobsthal_numbering_list(std::list<int> &ints, std::size_t chunk_size) {
+static void binary_insertion_according_to_jacobsthal_numbering_list(std::list<int> &ints, std::size_t chunk_size) {
     std::size_t prev_jacobsthal = 1;
     std::size_t jacobsthal = 3;
 
@@ -418,7 +418,7 @@ void binary_insertion_according_to_jacobsthal_numbering_list(std::list<int> &int
     }
 }
 
-void sort_chunk_pair_list(std::list<int> &ints, std::size_t idx, std::size_t chunk_size, std::list<int>::iterator &chunk) {
+static void sort_chunk_pair_list(std::list<int> &ints, std::size_t idx, std::size_t chunk_size, std::list<int>::iterator &chunk) {
     // ignore straggler chunk
     if (idx + chunk_size * 2 - 1 >= ints.size())
         return;
@@ -448,7 +448,7 @@ void sort_chunk_pair_list(std::list<int> &ints, std::size_t idx, std::size_t chu
     ints.splice(first_chunk, ints, second_chunk, third_chunk);
 }
 
-bool sort_chunk_pairs_list(std::list<int> &ints, std::size_t chunk_size) {
+static bool sort_chunk_pairs_list(std::list<int> &ints, std::size_t chunk_size) {
     if (chunk_size * 2 > ints.size())
         return false; // need at least one chunk pair because the loop runs at least once
     std::list<int>::iterator chunk = ints.begin();
@@ -458,7 +458,7 @@ bool sort_chunk_pairs_list(std::list<int> &ints, std::size_t chunk_size) {
     return true;
 }
 
-void sort_main_chain_list(std::list<int> &ints, std::size_t chunk_size) {
+static void sort_main_chain_list(std::list<int> &ints, std::size_t chunk_size) {
     if (!sort_chunk_pairs_list(ints, chunk_size))
         return;
 #ifdef DEBUG_LIST
