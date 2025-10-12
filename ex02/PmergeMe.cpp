@@ -474,6 +474,10 @@ void ford_johnson_list(std::list<int> &ints) { sort_main_chain_list(ints, 1); }
 
 int main(int argc, char **argv) {
 
+    // const char *_argv[] = {"PmergeMe", "18", "1", "5", "7", "8", "15", "12", "10", "21", "4", "20", "11", "9", "2", "6", "17", "16", "13", "3", "14", "19", NULL};
+    // argv = const_cast<char **>(_argv);
+    // argc = sizeof(_argv) / sizeof(_argv[0]) - 1;
+
     std::vector<int> ints_vector(static_cast<std::size_t>(argc - 1));
     for (int i = 1; i < argc; ++i) {
         ints_vector[static_cast<std::size_t>(i - 1)] = std::atoi(argv[i]);
@@ -483,9 +487,6 @@ int main(int argc, char **argv) {
     for (int i = 1; i < argc; ++i) {
         ints_list.push_back(std::atoi(argv[i]));
     }
-
-    // std::vector<int> ints_vector = {18, 1, 5, 7, 8, 15, 12, 10, 21, 4, 20, 11, 9, 2, 6, 17, 16, 13, 3, 14, 19};
-    // std::vector<int> ints_list = {18, 1, 5, 7, 8, 15, 12, 10, 21, 4, 20, 11, 9, 2, 6, 17, 16, 13, 3, 14, 19};
 
     std::cout << "Before (std::vector): ";
     print_vector(ints_vector, 0, false);
