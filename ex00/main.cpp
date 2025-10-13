@@ -9,5 +9,5 @@ int main(int argc, char **argv) {
         return EXIT_FAILURE;
     }
 
-    return BitcoinExchange("data.csv", argv[1]);
+    return BitcoinExchange(const_cast<char *>("data.csv"), argv[1]);
 }

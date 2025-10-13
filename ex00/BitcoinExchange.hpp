@@ -1,2 +1,2 @@
 #pragma once
-int BitcoinExchange(char *data, char *file)
+int BitcoinExchange(char *data, char *file);

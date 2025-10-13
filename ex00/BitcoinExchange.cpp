@@ -1,13 +1,13 @@
+#include <algorithm>
 #include <cstdlib>
 #include <ctime>
+#include <deque>
 #include <fstream>
+#include <iostream>
 #include <sstream>
+#include <stdlib.h>
 #include <string>
 #include <utility>
-#include <deque>
-#include <iostream>
-#include <algorithm>
-#include <stdlib.h>
 
 #include "BitcoinExchange.hpp"
 
@@ -19,18 +19,13 @@ static int dateToInt(std::string dateStr) {
         return -1;
     tmpDateStr[4] = '\0';
     tmpDateStr[7] = '\0';
-    if (!std::isdigit(tmpDateStr[0]) ||
-        !std::isdigit(tmpDateStr[1]) ||
-        !std::isdigit(tmpDateStr[2]) ||
-        !std::isdigit(tmpDateStr[3]))
+    if (!std::isdigit(tmpDateStr[0]) || !std::isdigit(tmpDateStr[1]) || !std::isdigit(tmpDateStr[2]) || !std::isdigit(tmpDateStr[3]))
         return -1;
     int year = std::atoi(tmpDateStr.c_str());
-    if (!std::isdigit(tmpDateStr[5]) ||
-        !std::isdigit(tmpDateStr[6]))
+    if (!std::isdigit(tmpDateStr[5]) || !std::isdigit(tmpDateStr[6]))
         return -1;
     int month = std::atoi(tmpDateStr.c_str() + 5);
-    if (!std::isdigit(tmpDateStr[8]) ||
-        !std::isdigit(tmpDateStr[9]))
+    if (!std::isdigit(tmpDateStr[8]) || !std::isdigit(tmpDateStr[9]))
         return -1;
     int day = std::atoi(tmpDateStr.c_str() + 8);
     if (day > 31 || day < 1 || month > 12 || month < 1)
@@ -48,16 +43,14 @@ static int dateToInt(std::string dateStr) {
     return *end ? -1 : dateAsInt;
 }
 
-static bool comp(const std::pair<int, double> &a, const std::pair<int, double> &b) {
-    return a.first < b.first;
-}
+static bool comp(const std::pair<int, double> &a, const std::pair<int, double> &b) { return a.first < b.first; }
 
-int BitcoinExchange(char *data, char *file) {
+int BitcoinExchange(char *dataFile, char *file) {
     std::string line;
 
-    std::ifstream dataRaw(data);
+    std::ifstream dataRaw(dataFile);
     if (!dataRaw)
-        return EXIT_FAILURE
+        return EXIT_FAILURE;
 
     std::deque<std::pair<int, double> > data;
     (void)std::getline(dataRaw, line); // ignore header
